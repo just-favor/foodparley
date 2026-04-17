@@ -52,7 +52,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     <>
       <SidebarNav />
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-50 left-0 h-16 bg-orange-500 flex items-center px-6 shadow-md w-full">
+        <header className="sticky top-0 z-50 left-0 h-16 bg-orange-900 flex items-center px-6 shadow-md w-full">
           <span className="text-white text-2xl font-black tracking-tight md:hidden">🍔 FoodParley</span>
           <span className="hidden md:block text-white text-3xl font-extrabold tracking-tight">🍔 FoodParley</span>
         </header>
