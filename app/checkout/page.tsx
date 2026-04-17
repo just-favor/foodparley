@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import { useCart } from '../components/CartContext';
+import { useAuth } from '../components/AuthContext';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaChevronLeft, FaCheckCircle } from 'react-icons/fa';
 
 export default function CheckoutPage() {
-  const { cartItems, getTotal, getTotalItems } = useCart();
+  const { cartItems, getTotal, getTotalItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const { data: session } = useSession();
   const router = useRouter();
   const [placed, setPlaced] = useState(false);
-  const [form, setForm] = useState({ name: '', address: '',Phone: '', payment: 'card' });
+  const [form, setForm] = useState({ name: '', address: '', phone: '', payment: 'card' });
 
   const total = getTotal();
   const delivery = 4200;
@@ -17,6 +21,36 @@ export default function CheckoutPage() {
 
   const handleOrder = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const order = {
+      id: Date.now().toString(),
+      placedAt: new Date().toISOString(),
+      customer: {
+        name: form.name,
+        phone: form.phone,
+        address: form.address,
+        accountName: session?.user?.name || user?.name || 'Guest',
+        accountPhone: user?.phone || '',
+        email: session?.user?.email || '',
+      },
+      items: cartItems.map(({ item, quantity }) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity,
+        subtotal: item.price * quantity,
+      })),
+      subtotal: total,
+      delivery,
+      grandTotal,
+      payment: form.payment,
+      status: 'pending',
+    };
+
+    const existing = JSON.parse(localStorage.getItem('fp_orders') || '[]');
+    localStorage.setItem('fp_orders', JSON.stringify([order, ...existing]));
+
+    clearCart();
     setPlaced(true);
   };
 
@@ -30,7 +64,7 @@ export default function CheckoutPage() {
         <p className="text-gray-500 text-sm mb-8">Your food is being prepared. Estimated delivery: 30–40 min.</p>
         <button
           onClick={() => router.push('/')}
-          className="bg-orange-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-orange-600 transition shadow-md shadow-orange-200"
+          className="bg-orange-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-orange-600 transition shadow-md shadow-orange-200 cursor-pointer"
         >
           Back to Home
         </button>
@@ -41,9 +75,8 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-8 px-4 pt-4">
 
-      {/* Header */}
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={() => router.back()} className="w-9 h-9 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-600 hover:text-orange-500 transition border border-gray-100">
+        <button onClick={() => router.back()} className="w-9 h-9 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-600 hover:text-orange-500 transition border border-gray-100 cursor-pointer">
           <FaChevronLeft className="w-4 h-4" />
         </button>
         <h1 className="text-xl font-black text-gray-900">Checkout</h1>
@@ -64,59 +97,41 @@ export default function CheckoutPage() {
         </div>
         <div className="border-t border-gray-100 mt-4 pt-3 space-y-1.5 text-sm">
           <div className="flex justify-between text-gray-500">
-            <span>Subtotal</span>
-            <span>₦{total.toLocaleString()}</span>
+            <span>Subtotal</span><span>₦{total.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-gray-500">
-            <span>Delivery</span>
-            <span>₦{delivery.toLocaleString()}</span>
+            <span>Delivery</span><span>₦{delivery.toLocaleString()}</span>
           </div>
           <div className="flex justify-between font-black text-gray-900 text-base pt-1">
-            <span>Total</span>
-            <span>₦{grandTotal.toLocaleString()}</span>
+            <span>Total</span><span>₦{grandTotal.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-      {/* Delivery Details */}
       <form onSubmit={handleOrder} className="space-y-4">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <h2 className="font-bold text-gray-700 text-sm mb-3">Delivery Details</h2>
           <div className="space-y-3">
-            <div>
-              <label className="text-xs text-gray-500 font-medium mb-1 block">Full Name</label>
-              <input
-                required
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="Your name"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 font-medium mb-1 block">Delivery Address</label>
-              <input
-                required
-                value={form.address}
-                onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
-                placeholder="Your address"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 font-medium mb-1 block">Phone number</label>
-              <input
-                required
-                value={form.Phone}
-                onChange={e => setForm(f => ({ ...f, Phone: e.target.value }))}
-                placeholder="Phone number"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition"
-              />
-            </div>
+            {[
+              { label: 'Full Name', key: 'name', placeholder: 'Your name', type: 'text' },
+              { label: 'Delivery Address', key: 'address', placeholder: 'Your address', type: 'text' },
+              { label: 'Phone Number', key: 'phone', placeholder: 'Phone number', type: 'tel' },
+            ].map(({ label, key, placeholder, type }) => (
+              <div key={key}>
+                <label className="text-xs text-gray-500 font-medium mb-1 block">{label}</label>
+                <input
+                  required
+                  type={type}
+                  value={form[key as keyof typeof form]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition"
+                />
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Payment Method */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <h2 className="font-bold text-gray-700 text-sm mb-3">Payment Method</h2>
           <div className="flex gap-3">
@@ -125,7 +140,7 @@ export default function CheckoutPage() {
                 key={method}
                 type="button"
                 onClick={() => setForm(f => ({ ...f, payment: method }))}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition ${
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition cursor-pointer ${
                   form.payment === method
                     ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-100'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300'
@@ -139,7 +154,7 @@ export default function CheckoutPage() {
 
         <button
           type="submit"
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition shadow-md shadow-orange-200 text-base"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition shadow-md shadow-orange-200 text-base cursor-pointer"
         >
           Place Order · ₦{grandTotal.toLocaleString()}
         </button>

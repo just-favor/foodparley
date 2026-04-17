@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 
 const INTRO_KEY = 'fp_intro_seen';
 
@@ -30,13 +31,15 @@ export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const router = useRouter();
+
   // ── Intro: only fires once per browser session ──
   useEffect(() => {
     if (sessionStorage.getItem(INTRO_KEY)) return;
     sessionStorage.setItem(INTRO_KEY, '1');
     setShowIntro(true);
-    const t1 = setTimeout(() => setExitIntro(true), 2200);
-    const t2 = setTimeout(() => setShowIntro(false), 2900);
+    const t1 = setTimeout(() => setExitIntro(true), 2500);
+    const t2 = setTimeout(() => setShowIntro(false), 3200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -117,12 +120,16 @@ export default function HomePage() {
           </p>
 
           <div className="flex gap-3 flex-wrap mb-12">
-            <button className="bg-orange-600 hover:bg-orange-500 text-white font-medium text-[14px]
-              px-8 py-3.5 rounded-xl transition-all hover:-translate-y-0.5">
+            <button
+              onClick={() => router.push('/menu')}
+              className="bg-orange-600 hover:bg-orange-500 text-white font-medium text-[14px]
+              px-8 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer">
               Browse menu →
             </button>
-            <button className="border border-white/25 hover:border-white/60 hover:bg-white/[0.07]
-              text-white/75 hover:text-white text-[14px] font-light px-7 py-3.5 rounded-xl transition-all">
+            <button
+              onClick={() => router.push('/menu')}
+              className="border border-white/25 hover:border-white/60 hover:bg-white/[0.07]
+              text-white/75 hover:text-white text-[14px] font-light px-7 py-3.5 rounded-xl transition-all cursor-pointer">
               View today's deals
             </button>
           </div>
@@ -143,7 +150,7 @@ export default function HomePage() {
             <button
               key={i}
               onClick={() => goSlide(i)}
-              className={`h-[3px] rounded-full transition-all duration-300
+              className={`h-[3px] rounded-full transition-all duration-300 cursor-pointer
                 ${i === activeSlide ? 'w-10 bg-orange-500' : 'w-6 bg-white/25'}`}
             />
           ))}
@@ -157,7 +164,10 @@ export default function HomePage() {
         <p className="text-sm text-white/40 font-light mb-10">What are you craving right now?</p>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none py-5">
           {categories.map(({ icon, name }) => (
-            <div key={name} className="flex-none w-[126px] bg-white/[0.04] hover:bg-orange-600/10
+            <div
+              key={name}
+              onClick={() => router.push('/menu')}
+              className="flex-none w-[126px] bg-white/[0.04] hover:bg-orange-600/10
               border border-white/[0.08] hover:border-orange-500/50 rounded-2xl p-5 text-center
               cursor-pointer transition-all hover:-translate-y-1">
               <span className="text-3xl block mb-2.5">{icon}</span>
@@ -174,7 +184,10 @@ export default function HomePage() {
         <p className="text-sm text-white/40 font-light mb-10">Crowd favourites this week</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {featured.map(({ icon, name, desc, price }) => (
-            <div key={name} className="bg-white/[0.04] hover:border-orange-500/40 border border-white/[0.07]
+            <div
+              key={name}
+              onClick={() => router.push('/menu')}
+              className="bg-white/[0.04] hover:border-orange-500/40 border border-white/[0.07]
               rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-1 group">
               <div className="h-[150px] bg-gradient-to-br from-[#1a1006] to-[#2e1a0a]
                 flex items-center justify-center text-5xl">
@@ -185,8 +198,10 @@ export default function HomePage() {
                 <div className="text-xs text-white/40 font-light leading-relaxed">{desc}</div>
                 <div className="flex items-center justify-between mt-4">
                   <span className="font-serif text-lg font-bold text-orange-400">{price}</span>
-                  <button className="w-8 h-8 rounded-full bg-orange-600 hover:bg-orange-500
-                    text-white text-xl flex items-center justify-center transition-all hover:scale-110">
+                  <button
+                    onClick={() => router.push('/menu')}
+                    className="w-8 h-8 rounded-full bg-orange-600 hover:bg-orange-500
+                    text-white text-xl flex items-center justify-center transition-all hover:scale-110 cursor-pointer">
                     +
                   </button>
                 </div>
@@ -224,8 +239,10 @@ export default function HomePage() {
           <span className="text-orange-400">that right now.</span>
         </h2>
         <p className="text-sm text-white/45 font-light mb-8">First order ships free. No promo code needed.</p>
-        <button className="bg-orange-600 hover:bg-orange-500 text-white font-medium text-[15px]
-          px-10 py-4 rounded-xl transition-all hover:-translate-y-0.5">
+        <button
+          onClick={() => router.push('/menu')}
+          className="bg-orange-600 hover:bg-orange-500 text-white font-medium text-[15px]
+          px-10 py-4 rounded-xl transition-all hover:-translate-y-0.5 cursor-pointer">
           Start your order →
         </button>
       </section>
