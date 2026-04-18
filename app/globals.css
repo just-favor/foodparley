@@ -57,5 +57,5 @@ body {
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
 body{
-  background-color: rgb(25, 7, 7);
+  background-color: var(--color-background);
 }
