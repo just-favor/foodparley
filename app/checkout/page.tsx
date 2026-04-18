@@ -6,6 +6,7 @@ import { useAuth } from '../components/AuthContext';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaChevronLeft, FaCheckCircle } from 'react-icons/fa';
+import { supabase } from '../lib/supabase';
 
 export default function CheckoutPage() {
   const { cartItems, getTotal, getTotalItems, clearCart } = useCart();
@@ -19,19 +20,24 @@ export default function CheckoutPage() {
   const delivery = 4200;
   const grandTotal = total + delivery;
 
-  const handleOrder = (e: React.FormEvent) => {
+  const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const accountName = session?.user?.name || user?.name || 'Guest';
+    const accountPhone = user?.phone || '';
+    const email = session?.user?.email || '';
+    const userId = user?.id || session?.user?.email || 'guest';
 
     const order = {
       id: Date.now().toString(),
-      placedAt: new Date().toISOString(),
+      placed_at: new Date().toISOString(),
       customer: {
         name: form.name,
         phone: form.phone,
         address: form.address,
-        accountName: session?.user?.name || user?.name || 'Guest',
-        accountPhone: user?.phone || '',
-        email: session?.user?.email || '',
+        accountName,
+        accountPhone,
+        email,
       },
       items: cartItems.map(({ item, quantity }) => ({
         id: item.id,
@@ -42,13 +48,23 @@ export default function CheckoutPage() {
       })),
       subtotal: total,
       delivery,
-      grandTotal,
+      grand_total: grandTotal,
       payment: form.payment,
       status: 'pending',
     };
 
-    const existing = JSON.parse(localStorage.getItem('fp_orders') || '[]');
-    localStorage.setItem('fp_orders', JSON.stringify([order, ...existing]));
+    // Save to Supabase
+    await supabase.from('orders').insert(order);
+
+    // Upsert user
+    if (userId !== 'guest') {
+      await supabase.from('users').upsert({
+        id: userId,
+        name: accountName,
+        phone: accountPhone,
+        email,
+      });
+    }
 
     clearCart();
     setPlaced(true);

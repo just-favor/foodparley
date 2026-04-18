@@ -162,7 +162,7 @@ export default function HomePage() {
         <p className="text-[11px] tracking-[3px] uppercase text-orange-500 font-medium mb-2">Explore</p>
         <h2 className="font-serif text-3xl font-bold mb-1">Browse by category</h2>
         <p className="text-sm text-white/40 font-light mb-10">What are you craving right now?</p>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none py-5">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none py-5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {categories.map(({ icon, name }) => (
             <div
               key={name}
@@ -193,8 +193,8 @@ export default function HomePage() {
                 flex items-center justify-center text-5xl">
                 {icon}
               </div>
-              <div className="p-4">
-                <div className="font-serif text-base font-bold mb-1">{name}</div>
+              <div className="p-2">
+                <div className="font-serif text-sm font-bold mb-1">{name}</div>
                 <div className="text-xs text-white/40 font-light leading-relaxed">{desc}</div>
                 <div className="flex items-center justify-between mt-4">
                   <span className="font-serif text-lg font-bold text-orange-400">{price}</span>

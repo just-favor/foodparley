@@ -7,6 +7,10 @@ export interface MenuItem {
   category: 'Food' | 'Drink' | 'Snack';
 }
 
+// Items now live in Supabase — fallback is empty
+export const menuItems: MenuItem[] = [];
+
+/* HARDCODED FALLBACK — uncomment if Supabase is unavailable
 export const menuItems: MenuItem[] = [
   { id: '1', name: 'Classic Burger', description: 'Juicy beef patty, fresh lettuce, tomato, cheese, special sauce', price: 18200, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&fit=crop&auto=format', category: 'Food' },
   { id: '2', name: 'Margherita Pizza', description: 'Fresh mozzarella, basil, tomato sauce on thin crust', price: 20950, image: 'https://i.pinimg.com/736x/42/cf/f1/42cff1d78879f3c692a44ccc24f2dab3.jpg', category: 'Food' },
@@ -39,4 +43,4 @@ export const menuItems: MenuItem[] = [
   { id: '29', name: 'Milkshake', description: 'Vanilla milkshake with whipped cream', price: 8400, image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&fit=crop&auto=format', category: 'Drink' },
   { id: '30', name: 'Pretzels', description: 'Soft salted pretzels with mustard', price: 6000, image: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&fit=crop&auto=format', category: 'Snack' },
 ];
-
+*/

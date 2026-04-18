@@ -1,17 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MenuCard from '../components/MenuCard';
 import { useCart } from '../components/CartContext';
-import {
-  FaSearch,
-  FaWineBottle,
-  FaCandyCane,
-  FaHamburger,
-  FaBorderAll,
-} from 'react-icons/fa';
-import { menuItems as sampleMenuItems } from '../data/menuItems';
+import { FaSearch, FaWineBottle, FaCandyCane, FaHamburger, FaBorderAll } from 'react-icons/fa';
+import { supabase } from '../lib/supabase';
+import { menuItems as fallbackItems } from '../data/menuItems';
 import { toast } from 'react-hot-toast';
+
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+}
 
 const tabs = [
   { id: 'all', label: 'All', icon: FaBorderAll },
@@ -23,30 +27,45 @@ const tabs = [
 export default function MenuPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(fallbackItems);
+  const [loading, setLoading] = useState(false);
   const { addToCart } = useCart();
 
-  // ✅ ADD FUNCTION
-  const handleAddToCart = (item: any) => {
+  useEffect(() => {
+    const fetchMenu = async () => {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('available', true)
+        .order('category');
+
+      if (error || !data || data.length === 0) {
+        setMenuItems(fallbackItems);
+      } else {
+        setMenuItems(data);
+      }
+      setLoading(false);
+    };
+    fetchMenu();
+  }, []);
+
+  const handleAddToCart = (item: MenuItem) => {
     addToCart(item);
     toast.success(`${item.name} added to cart`);
   };
 
-  const filteredItems = sampleMenuItems.filter((item) => {
+  const filteredItems = menuItems.filter(item => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesTab =
-      activeTab === 'all' || item.category.toLowerCase() === activeTab;
-
+    const matchesTab = activeTab === 'all' || item.category.toLowerCase() === activeTab;
     return matchesSearch && matchesTab;
   });
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-4 pb-24 md:pb-8">
 
-      {/* 🔍 Search */}
+      {/* Search */}
       <div className="sticky top-0 z-20 -mx-4 px-4 pt-2 pb-3 bg-gradient-to-b from-gray-50 via-gray-50/90 to-transparent">
         <div className="relative max-w-2xl mx-auto">
           <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-white/60 bg-white/30 backdrop-blur-xl shadow-lg shadow-black/5 ring-1 ring-black/5 focus-within:ring-orange-400 focus-within:border-orange-300 transition-all">
@@ -54,32 +73,25 @@ export default function MenuPage() {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search foods, drinks, snacks..."
               className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 text-sm font-medium"
             />
             {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-              >
-                ×
-              </button>
+              <button onClick={() => setSearchTerm('')} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer">×</button>
             )}
           </div>
         </div>
       </div>
 
-      {/* 🧭 Tabs */}
+      {/* Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap ${
-              activeTab === id
-                ? 'bg-orange-900 text-white'
-                : 'bg-white text-gray-600 hover:bg-orange-50 hover:text-orange-500 shadow-sm'
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === id ? 'bg-orange-900 text-white' : 'bg-white text-gray-600 hover:bg-orange-50 hover:text-orange-500 shadow-sm'
             }`}
           >
             <Icon className="w-4 h-4" />
@@ -88,15 +100,24 @@ export default function MenuPage() {
         ))}
       </div>
 
-      {/* 🍔 Menu Grid */}
-      {filteredItems.length > 0 ? (
+      {/* Loading skeleton */}
+      {loading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          {filteredItems.map((item) => (
-            <MenuCard
-              key={item.id}
-              item={item}
-              onAddToCart={() => handleAddToCart(item)} // ✅ FIXED
-            />
+          {Array(8).fill(0).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100 animate-pulse">
+              <div className="aspect-square bg-gray-100" />
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-gray-100 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+                <div className="h-8 bg-gray-100 rounded mt-3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredItems.length > 0 ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {filteredItems.map(item => (
+            <MenuCard key={item.id} item={item} onAddToCart={() => handleAddToCart(item)} />
           ))}
         </div>
       ) : (
@@ -108,7 +129,6 @@ export default function MenuPage() {
           <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
         </div>
       )}
-
     </div>
   );
 }
