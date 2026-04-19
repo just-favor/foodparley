@@ -20,6 +20,27 @@ export default function CheckoutPage() {
   const delivery = 4200;
   const grandTotal = total + delivery;
 
+  // Redirect to profile (sign in) if not logged in
+  if (!user && !session) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-5">
+          <svg className="w-10 h-10 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-black text-gray-900 mb-2">Sign in to checkout</h1>
+        <p className="text-gray-500 text-sm mb-8">You need an account to place an order.</p>
+        <button
+          onClick={() => router.push('/profile')}
+          className="bg-orange-500 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-orange-600 transition shadow-md shadow-orange-200 cursor-pointer"
+        >
+          Sign In / Create Account
+        </button>
+      </div>
+    );
+  }
+
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -141,7 +162,7 @@ export default function CheckoutPage() {
                   value={form[key as keyof typeof form]}
                   onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                   placeholder={placeholder}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-orange-400 transition"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-base outline-none focus:border-orange-400 transition"
                 />
               </div>
             ))}

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { FaSignOutAlt, FaBox, FaUsers, FaMoneyBillWave, FaClock, FaCheckCircle, FaChevronDown, FaChevronUp, FaToggleOn, FaToggleOff, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 
-const ADMIN_PASSWORD = 'foodparley2024';
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD!;
 
 interface OrderItem {
   id: string;
@@ -57,6 +57,10 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (sessionStorage.getItem('fp_admin')) setAuthed(true);
+  }, []);
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -145,8 +149,11 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) { setAuthed(true); setError(''); }
-    else setError('Incorrect password');
+    if (password === ADMIN_PASSWORD) {
+      setAuthed(true);
+      sessionStorage.setItem('fp_admin', '1');
+      setError('');
+    } else setError('Incorrect password');
   };
 
   if (!authed) {
@@ -202,7 +209,7 @@ export default function AdminPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
             Live
           </span>
-          <button onClick={() => setAuthed(false)} className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm cursor-pointer">
+          <button onClick={() => { setAuthed(false); sessionStorage.removeItem('fp_admin'); }} className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm cursor-pointer">
             <FaSignOutAlt className="w-4 h-4" /> Logout
           </button>
         </div>
