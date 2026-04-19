@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 export interface MenuItem {
   id: string;
@@ -29,7 +29,14 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cartMap, setCartMap] = useState<Record<string, CartItem>>({});
+  const [cartMap, setCartMap] = useState<Record<string, CartItem>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('cart') || '{}'); } catch { return {}; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cartMap));
+  }, [cartMap]);
 
   const addToCart = (item: MenuItem) => {
     setCartMap(prev => ({
